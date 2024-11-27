@@ -18,3 +18,4 @@ def conn_mongodb():
     
     # 컬렉션 객체 반환
     return blog_ab
+
