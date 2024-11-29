@@ -1,6 +1,6 @@
-from flask import Flask, Blueprint, request, render_template, make_response, jsonify, redirect, url_for, session
+from flask import Flask, Blueprint, request, render_template, make_response, jsonify, redirect, url_for
 from blog_control.user_mgmt import User
-from flask_login import login_user
+from flask_login import login_user, current_user
 
 blog_abtest = Blueprint('blog', __name__)   # 첫번째 인자: blueprint이름, 두번째 인자: 현재파일의 모듈명
 
@@ -14,11 +14,11 @@ def set_email():
         #print('set_email', request.get_json())  
         print('set_email', request.form['user_email'])      # set_email 사용자가 입력한 email 이 출려된다.
         user = User.create(request.form['user_email'],'A')  # email과 blog_id를 넣어준다, User.create() 인자없이 보내면 DB에 추가한다.
-        login_user(user) # 여기서 세션을 생성한다, 세션을 만들때 login_user에 user라는 객체를 넣어서 만들고 클라이언트에게 응답할때 set-cookie에 세션을 넣어서 보내야한다.
+        login_user(user) # 여기서 이미 생선된 세션에 login_user에 user라는 객체를 넣어서 만들고
+                         # get_id 메서드로 고유식별자 값을 추출해서 세션ID에 추출된 _user_id를 저장. 
+                         # 클라이언트에게 응답할때 set-cookie에 세션을 넣어서 보내야한다.
                          # 그 다음 클라이언트가 다시 요청을 보낼때 request header에 세션정보가 같이 들어온다. 
                          # 서버는 세션 id를 디코딩한다.
-        se = session.get('user_email')
-        print(se)
         return redirect(url_for('blog.test_blog'))  # url_for모듈과 쓸경우 url_for(blueprint의이름.함수명) 
         # return redirect('/blog/test_blog')        # redirect만 쓸경우 전체 경로 
                                                     # 둘중 어떤 방법을 사용해도 상관 없다.
@@ -31,4 +31,5 @@ def set_email():
 
 @blog_abtest.route('/test_blog')
 def test_blog():
-    return render_template('blog_A.html')
+    if current_user.is_authenticated:
+        return render_template('blog_A.html', user_email=) # jinja2 템플릿에서 읽을 user_email 전달
